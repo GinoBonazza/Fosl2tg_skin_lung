@@ -1,0 +1,472 @@
+---
+title: "Lung: QC, integration, annotation"
+author: "GinoBonazza (ginoandrea.bonazza@usz.ch)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r knitr config, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+
+knitr::opts_chunk$set(message = FALSE)
+
+knitr::opts_chunk$set(cache = FALSE)
+
+knitr::opts_chunk$set(dpi = 300, fig.align = "center")
+```
+
+## Setup
+
+```{r setup, class.source = "fold-hide"}
+# Get current file name to make folder
+current_file <- "Lung_QC_integration_annotation"
+
+# Load libraries
+library(here)
+library(readr)
+library(readxl)
+library(xlsx)
+library(Seurat)
+library(DropletUtils)
+library(Matrix)
+library(scDblFinder)
+library(scCustomize)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(harmony)
+library(tidyverse)
+library(reshape2)
+library(S4Vectors)
+library(SingleCellExperiment)
+library(pheatmap)
+library(png)
+library(gridExtra)
+library(knitr)
+library(scales)
+library(RColorBrewer)
+library(Matrix.utils)
+library(tibble)
+library(ggplot2)
+library(scater)
+library(patchwork)
+library(statmod)
+library(clustree)
+library(gprofiler2)
+
+#Output paths
+output_dir_data <- here::here("output", current_file)
+if (!dir.exists(output_dir_data)) dir.create(output_dir_data)
+
+if (!dir.exists(here::here("docs", "figure"))) dir.create(here::here("docs", "figure"))
+
+output_dir_figs <- here::here("docs", "figure", paste0(current_file, ".Rmd"))
+if (!dir.exists(output_dir_figs)) dir.create(output_dir_figs)
+```
+
+## Quality Control
+
+```{r sample_names}
+sample_names <- c("Con1-SN1738",
+                  "Con2-SN1846",
+                  "Con3-SN1848",
+                  "Fosl2tg1-SN1728",
+                  "Fosl2tg2-SN1850",
+                  "Fosl2tg3-SN1853")
+
+cell_ids <- c("Con1_SN1738",
+              "Con2_SN1846",
+              "Con3_SN1848",
+              "Fosl2tg1_SN1728",
+              "Fosl2tg2_SN1850",
+              "Fosl2tg3_SN1853")
+```
+
+```{r Lung_preQC}
+Lung_preQC <- list()
+
+for (sample in sample_names) {
+  Lung_preQC[sample] <- Read10X_h5(filename = here::here("data", "Lung", sample, "sample_feature_bc_matrix.h5"))
+  Lung_preQC[[sample]] <- CreateSeuratObject(Lung_preQC[[sample]], project = sample)
+}
+
+Lung_preQC <- merge(Lung_preQC[[sample_names[1]]], y = c(Lung_preQC[[sample_names[2]]], 
+                                                      Lung_preQC[[sample_names[3]]], 
+                                                      Lung_preQC[[sample_names[4]]], 
+                                                      Lung_preQC[[sample_names[5]]], 
+                                                      Lung_preQC[[sample_names[6]]]), 
+                    add.cell.ids = c(cell_ids[1], 
+                                    cell_ids[2], 
+                                    cell_ids[3], 
+                                    cell_ids[4], 
+                                    cell_ids[5], 
+                                    cell_ids[6])
+                   )
+```
+
+```{r percent.mt}
+Lung_preQC$Sample <- Lung_preQC$orig.ident
+Lung_preQC[["percent.mt"]] <- PercentageFeatureSet(Lung_preQC, pattern = "^mt-")
+Lung_preQC[["percent.rp"]] <- PercentageFeatureSet(Lung_preQC, pattern = "^Rp[sl]")
+table(Lung_preQC$Sample)
+```
+
+Check quality control parameters
+
+```{r QC_pre_VlnPlots, fig.height=6, fig.width=8}
+p1 <- VlnPlot(Lung_preQC, features = "nCount_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung_preQC, features = "nFeature_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung_preQC, features = "percent.mt", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung_preQC, features = "percent.rp", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_pre_VlnPlots <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_pre_VlnPlots
+```
+
+```{r QC_pre_VlnPlots_zoom, fig.height=10, fig.width=8}
+p1 <- VlnPlot(Lung_preQC, features = "nCount_RNA", group.by = "Sample", pt.size = 0, y.max = 20000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung_preQC, features = "nFeature_RNA", group.by = "Sample", pt.size = 0, y.max = 5000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung_preQC, features = "percent.mt", group.by = "Sample", pt.size = 0, y.max = 25) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung_preQC, features = "percent.rp", group.by = "Sample", pt.size = 0, y.max = 50) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_pre_VlnPlots_zoom <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_pre_VlnPlots_zoom
+```
+
+Doublets detection
+
+```{r scDblFinder}
+Lung_preQC_sce <- as.SingleCellExperiment(Lung_preQC)
+Lung_preQC_sce <- scDblFinder(Lung_preQC_sce, samples="Sample", clusters = TRUE)
+table(Lung_preQC_sce@colData$scDblFinder.class)
+Lung_preQC <- as.Seurat(Lung_preQC_sce, counts = "counts", data = "logcounts")
+rm(Lung_preQC_sce)
+Lung_preQC@meta.data[Lung_preQC@meta.data$scDblFinder.class %in% "singlet", "scDblFinder.n"] = paste0("Singlets (n=", table(Lung_preQC$scDblFinder.class)[1], ")")
+Lung_preQC@meta.data[Lung_preQC@meta.data$scDblFinder.class %in% "doublet", "scDblFinder.n"] = paste0("Doublets (n=", table(Lung_preQC$scDblFinder.class)[2], ")")
+Lung_preQC$scDblFinder.n <- factor(x = Lung_preQC$scDblFinder.n, levels = c(rownames(table(Lung_preQC$scDblFinder.n))[2], rownames(table(Lung_preQC$scDblFinder.n))[1])) 
+```
+
+```{r QC_pre_Doublets, fig.height=3, fig.width=8}
+p1 <- VlnPlot(Lung_preQC, features = c("nCount_RNA"), split.by = "scDblFinder.n", group.by = "Sample", pt.size = 0, y.max = 50000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung_preQC, features = c("nFeature_RNA"), split.by = "scDblFinder.n", group.by = "Sample", pt.size = 0, y.max = 10000) + theme(axis.title.x = element_blank()) 
+
+QC_pre_Doublets <- p1 + p2 + plot_layout(ncol = 2)
+
+QC_pre_Doublets
+```
+
+```{r Save Lung_preQC, eval=FALSE}
+saveRDS(Lung_preQC, 
+        here::here(output_dir_data, "Lung_preQC.rds"))
+```
+
+Remove doublets
+
+```{r Lung_preQC_no_doublets}
+Lung_preQC_no_doublets <- subset(x = Lung_preQC, subset = scDblFinder.class == "singlet")
+table(Lung_preQC_no_doublets@meta.data$scDblFinder.class)
+rm(Lung_preQC)
+```
+
+Check quality control parameters after removing doublets
+
+```{r QC_pre_no_doublets_VlnPlots, fig.height=6, fig.width=8}
+p1 <- VlnPlot(Lung_preQC_no_doublets, features = "nCount_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung_preQC_no_doublets, features = "nFeature_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung_preQC_no_doublets, features = "percent.mt", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung_preQC_no_doublets, features = "percent.rp", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_pre_no_doublets_VlnPlots <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_pre_no_doublets_VlnPlots
+```
+
+```{r QC_pre_no_doublets_VlnPlots_zoom, fig.height=10, fig.width=8}
+p1 <- VlnPlot(Lung_preQC_no_doublets, features = "nCount_RNA", group.by = "Sample", pt.size = 0, y.max = 20000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung_preQC_no_doublets, features = "nFeature_RNA", group.by = "Sample", pt.size = 0, y.max = 5000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung_preQC_no_doublets, features = "percent.mt", group.by = "Sample", pt.size = 0, y.max = 25) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung_preQC_no_doublets, features = "percent.rp", group.by = "Sample", pt.size = 0, y.max = 50) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_pre_no_doublets_VlnPlots_zoom <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_pre_no_doublets_VlnPlots_zoom
+```
+
+Filter based on number of counts, features and percentage of mitochondrial genes
+
+```{r Lung}
+Lung <- subset(Lung_preQC_no_doublets, subset = 
+                nFeature_RNA > 200 &
+                percent.mt < 25 &
+                nCount_RNA > 500)
+
+table(Lung$Sample)
+#rm(Lung_preQC_no_doublets)
+```
+
+Check quality control parameters
+
+```{r QC_post_VlnPlots, fig.height=6, fig.width=8}
+p1 <- VlnPlot(Lung, features = "nCount_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung, features = "nFeature_RNA", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung, features = "percent.mt", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung, features = "percent.rp", group.by = "Sample", pt.size = 0) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_post_VlnPlots <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_post_VlnPlots
+```
+
+```{r QC_post_VlnPlots_zoom, fig.height=10, fig.width=8}
+p1 <- VlnPlot(Lung, features = "nCount_RNA", group.by = "Sample", pt.size = 0, y.max = 20000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p2 <- VlnPlot(Lung, features = "nFeature_RNA", group.by = "Sample", pt.size = 0, y.max = 5000) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p3 <- VlnPlot(Lung, features = "percent.mt", group.by = "Sample", pt.size = 0, y.max = 25) + theme(axis.title.x = element_blank()) + NoLegend()
+
+p4 <- VlnPlot(Lung, features = "percent.rp", group.by = "Sample", pt.size = 0, y.max = 50) + theme(axis.title.x = element_blank()) + NoLegend()
+
+QC_post_VlnPlots_zoom <- p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+
+QC_post_VlnPlots_zoom
+```
+
+## Integration and clustering
+
+Normalization and scaling.
+
+```{r eval=FALSE}
+DefaultAssay(Lung) <- "RNA"
+Lung_not_integrated <- Lung %>%
+    NormalizeData() %>%
+    FindVariableFeatures(selection.method = "vst", nfeatures = 2000) %>% 
+    ScaleData(features = rownames(Lung), vars.to.regress = "percent.mt")
+```
+
+PCA 
+
+```{r, eval=FALSE, include=FALSE}
+Lung_not_integrated <- RunPCA(Lung_not_integrated, npcs = 50)
+```
+
+```{r eval=FALSE}
+saveRDS(Lung_not_integrated, 
+        here::here(output_dir_data, "Lung_not_integrated.rds"))
+```
+
+```{r}
+Lung_not_integrated <- readRDS(here::here(output_dir_data, "Lung_not_integrated.rds"))
+```
+
+
+```{r Elbow_not_integrated, fig.width=4, fig.height=4}
+ElbowPlot(Lung_not_integrated, ndims = 50)
+```
+
+Clustering without integration
+
+```{r eval=FALSE}
+Lung_not_integrated <- RunUMAP(Lung_not_integrated, dims = 1:40)
+Lung_not_integrated <- FindNeighbors(Lung_not_integrated, dims = 1:40)
+Lung_not_integrated <- FindClusters(Lung_not_integrated, resolution = seq(0.1, 0.8, by=0.1))
+```
+
+```{r Clustree_not_integrated, fig.width=6, fig.height=9}
+clustree::clustree(Lung_not_integrated@meta.data[,grep("RNA_snn_res", colnames(Lung_not_integrated@meta.data))],
+                   prefix = "RNA_snn_res.")
+```
+
+```{r Add_group_info}
+Lung_not_integrated@meta.data[Lung_not_integrated@meta.data$Sample %in% c("Con1-SN1738", "Con2-SN1846", "Con3-SN1848"), "Group"] = "WT"
+Lung_not_integrated@meta.data[Lung_not_integrated@meta.data$Sample %in% c("Fosl2tg1-SN1728", "Fosl2tg2-SN1850", "Fosl2tg3-SN1853"), "Group"] = "Fosl2tg"
+```
+
+```{r UMAPs_not_integrated, fig.width=14, fig.height=4}
+DimPlot(Lung_not_integrated, reduction = "umap", shuffle = T,
+        group.by = c("RNA_snn_res.0.2", "Sample", "Group"), ncol = 3)
+```
+
+```{r eval=FALSE}
+saveRDS(Lung_not_integrated, 
+        here::here(output_dir_data, "Lung_not_integrated.rds"))
+```
+
+Integrate the samples using Harmony
+
+```{r eval=FALSE}
+Lung_integrated <- RunHarmony(Lung_not_integrated, assay.use="RNA", group.by.vars = "Sample", dims.use = 1:50)
+```
+
+```{r eval=FALSE}
+Lung_integrated <- RunUMAP(Lung_integrated, dims = 1:40, reduction = "harmony")
+Lung_integrated <- FindNeighbors(Lung_integrated, dims = 1:40, reduction = "harmony")
+Lung_integrated <- FindClusters(Lung_integrated, resolution = seq(0.1, 0.8, by=0.1))
+```
+
+```{r eval=FALSE}
+saveRDS(Lung_integrated, 
+        here::here(output_dir_data, "Lung_integrated.rds"))
+```
+
+```{r}
+Lung_integrated <- readRDS(here::here(output_dir_data, "Lung_integrated.rds"))
+```
+
+```{r Clustree_integrated, fig.width=6, fig.height=9}
+clustree::clustree(Lung_integrated@meta.data[,grep("RNA_snn_res", colnames(Lung_integrated@meta.data))],
+                   prefix = "RNA_snn_res.")
+```
+
+```{r UMAPs_integrated, fig.width=14, fig.height=4}
+DimPlot(Lung_integrated, reduction = "umap", shuffle = T,
+        group.by = c("RNA_snn_res.0.2", "Sample", "Group"), ncol = 3, label = T)
+```
+
+Find the markers that characterize each cell population
+
+```{r}
+DefaultAssay(Lung_integrated) <- "RNA"
+Idents(Lung_integrated) <- "RNA_snn_res.0.2"
+Markers <- FindAllMarkers(Lung_integrated, only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5)
+write.csv(Markers, here::here(output_dir_data, "Lung_Markers_all.csv"))
+Markers_top10 <- as.data.frame(Markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC))
+write.csv(Markers_top10, here::here(output_dir_data, "Lung_Markers_top10.csv"))
+Markers_top3 <- as.data.frame(Markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_log2FC))
+write.csv(Markers_top3, here::here(output_dir_data, "Lung_Markers_top3.csv"))
+```
+
+```{r Heatmap_low_quality, fig.width=15, fig.height=10}
+mapal <- colorRampPalette(RColorBrewer::brewer.pal(9,"RdBu"))(256)
+mapal <- rev(mapal[1:256])
+Heatmap <- DoHeatmap(Lung_integrated, draw.line = F, features = Markers_top10$gene) +
+  scale_fill_gradientn(colours = mapal) +
+  theme(text = element_text(size = 15), axis.text.y = element_text(size = 5)) +
+  theme(plot.margin = unit(c(0.1, 0, 0, 0), 
+                           "inches"))
+Heatmap
+```
+
+Check QC parameters in each cluster
+
+```{r QC_VlnPlots_low_quality, fig.width=10, fig.height=6}
+VlnPlot(Lung_integrated, features = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.rp"), ncol = 2, pt.size = 0)
+```
+
+Check cell cycle genes
+
+```{r Cell_cycle_UMAP, fig.width=5, fig.height=4}
+DefaultAssay(Lung_integrated) <- "RNA"
+mmus_s = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+mmus_g2m = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+Lung_integrated <- CellCycleScoring(Lung_integrated, s.features = mmus_s, g2m.features = mmus_g2m)
+DimPlot(Lung_integrated, reduction = "umap", shuffle = T,
+        group.by = "Phase")
+```
+
+
+## Cell type annotation
+
+Annotate the clusters based on the characteristic markers
+
+```{r}
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("0"), "cell_type"] = "Endothelial cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("1"), "cell_type"] = "T cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("2"), "cell_type"] = "Alveolar macrophages"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("3"), "cell_type"] = "B cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("4"), "cell_type"] = "Monocytes"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("5"), "cell_type"] = "Fibroblasts"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("6"), "cell_type"] = "Neutrophils"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("7"), "cell_type"] = "AT1/AT2 cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("8"), "cell_type"] = "Dendritic cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("9"), "cell_type"] = "Interstitial macrophages"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("10"), "cell_type"] = "Aerocytes"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("11"), "cell_type"] = "Red blod cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("12"), "cell_type"] = "Proliferating cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("13"), "cell_type"] = "Club/Ciliated/Basal cells"
+Lung_integrated@meta.data[Lung_integrated@meta.data$RNA_snn_res.0.2 %in% c("14"), "cell_type"] = "Lymphatic cells"
+
+Lung_integrated$cell_type <- factor(Lung_integrated$cell_type, levels = c("Endothelial cells", 
+                                                                        "T cells",
+                                                                        "Alveolar macrophages",
+                                                                        "B cells",
+                                                                        "Monocytes",
+                                                                        "Fibroblasts",
+                                                                        "Neutrophils",
+                                                                        "AT1/AT2 cells",
+                                                                        "Dendritic cells",
+                                                                        "Interstitial macrophages",
+                                                                        "Aerocytes",
+                                                                        "Red blod cells",
+                                                                        "Proliferating cells",
+                                                                        "Club/Ciliated/Basal cells",
+                                                                        "Lymphatic cells"))
+Idents(Lung_integrated) <- Lung_integrated$cell_type
+```
+
+```{r FindAllMarkers cell_type}
+DefaultAssay(Lung_integrated) <- "RNA"
+Idents(Lung_integrated) <- "cell_type"
+Markers <- FindAllMarkers(Lung_integrated, only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5)
+write.csv(Markers, here::here(output_dir_data, "Lung_Markers_all_cell_type.csv"))
+Markers_top10 <- as.data.frame(Markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC))
+write.csv(Markers_top10, here::here(output_dir_data, "Lung_Markers_top10_cell_type.csv"))
+Markers_top3 <- as.data.frame(Markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_log2FC))
+write.csv(Markers_top3, here::here(output_dir_data, "Lung_Markers_top3_cell_type.csv"))
+```
+
+```{r Heatmap, fig.width=12, fig.height=8}
+mapal <- colorRampPalette(RColorBrewer::brewer.pal(9,"RdBu"))(256)
+mapal <- rev(mapal[1:256])
+Heatmap <- DoHeatmap(Lung_integrated, label = FALSE, draw.line = F, features = Markers_top10$gene) + 
+  scale_fill_gradientn(colours = mapal) +
+  theme(text = element_text(size = 12), 
+        axis.text.y = element_text(size = 4.5)) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "inches")) +
+  guides(fill = guide_colorbar(barwidth = 1, barheight = 4))
+Heatmap
+```
+
+```{r UMAP_cell_type, fig.width=6.5, fig.height=6}
+p <- DimPlot(Lung_integrated, group.by = "cell_type", reduction = "umap", label = F, shuffle = T) + 
+  NoLegend() + 
+  theme(axis.text=element_text(size=16, face = "bold"), axis.title = element_text(size = 20, face = "bold")) + 
+  theme(plot.title = element_blank())
+LabelClusters(p, id = "cell_type", fontface = "bold", size = 4, repel = T)
+```
+
+```{r DotPlot_markers, fig.width=8, fig.height=12}
+DotPlot(Lung_integrated, assay = "RNA", features = rev(Markers_top3$gene), dot.scale = 5, cluster.idents = FALSE) +
+  RotatedAxis() +
+  coord_flip() +
+  theme(axis.title = element_blank(), axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 13), legend.text = element_text(size = 9), legend.title = element_text(size = 11), plot.margin = unit(c(0, 0, 0, 0.1), 
+                           "inches"))
+```
+
+```{r FeatPlot_markers, fig.width=20, fig.height=10}
+FeaturePlot(Lung_integrated, features = c("Ptprb", "Cd28", "Lpl", "Ms4a1", "Ly6c2", "Col1a2", "S100a8", "Sftpc", "Ccl17", "C1qa", "Ednrb","Hba-a1", "Top2a", "Cyp2f2", "Mmrn1", "Lyz2", "Nkg7", "Ager", "Aqp5", "Itgax", "Ccr2", "Plac8", "Cd163", "Mrc1", "Scgb1a1", "Foxj1", "Muc5ac", "Krt5"), ncol = 7)
+```
+
+```{r save Lung_integrated final, eval = FALSE}
+saveRDS(Lung_integrated, 
+        here::here(output_dir_data, "Lung_integrated.rds"))
+```
