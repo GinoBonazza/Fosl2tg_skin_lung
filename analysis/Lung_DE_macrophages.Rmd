@@ -1,5 +1,5 @@
 ---
-title: "Differential abundance and differential expression analysis in monocytes, macrophages, DC"
+title: "Differential expression analysis in monocytes, macrophages, DC (Lung)"
 author: "GinoBonazza (ginoandrea.bonazza@usz.ch)"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: workflowr::wflow_html
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(dpi = 300, fig.align = "center")
 
 ```{r setup, class.source = "fold-hide"}
 # Get current file name to make folder
-current_file <- "DE_myeloid"
+current_file <- "Lung_DE_macrophages"
 
 # Load libraries
 library(here)
