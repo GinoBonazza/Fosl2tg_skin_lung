@@ -1,5 +1,5 @@
 ---
-title: "Differential abundance and differential expression analysis in myeloid cells"
+title: "Differential abundance and differential expression analysis in monocytes, macrophages, DC"
 author: "GinoBonazza (ginoandrea.bonazza@usz.ch)"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: workflowr::wflow_html
