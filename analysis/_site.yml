@@ -5,6 +5,13 @@ navbar:
   left:
   - text: Home
     href: index.html
+  - text: Analysis
+    icon: fa-navicon
+    menu:
+      - text: "Lung - QC, integration, annotation"
+        href: Lung_QC_integration_annotation.html
+      - text: "Lung - DE macrophages"
+        href: Lung_DE_macrophages.html
   - text: About
     href: about.html
   - text: License
