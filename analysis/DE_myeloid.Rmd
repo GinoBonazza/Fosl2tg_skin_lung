@@ -1,0 +1,1113 @@
+---
+title: "Differential abundance and differential expression analysis in myeloid cells"
+author: "GinoBonazza (ginoandrea.bonazza@usz.ch)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r knitr config, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+
+knitr::opts_chunk$set(message = FALSE)
+
+knitr::opts_chunk$set(cache = FALSE)
+
+knitr::opts_chunk$set(dpi = 300, fig.align = "center")
+```
+
+## Setup
+
+```{r setup, class.source = "fold-hide"}
+# Get current file name to make folder
+current_file <- "DE_myeloid"
+
+# Load libraries
+library(here)
+library(readr)
+library(readxl)
+library(xlsx)
+library(Seurat)
+library(DropletUtils)
+library(Matrix)
+library(scDblFinder)
+library(scCustomize)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(reshape2)
+library(S4Vectors)
+library(SingleCellExperiment)
+library(pheatmap)
+library(png)
+library(gridExtra)
+library(knitr)
+library(scales)
+library(RColorBrewer)
+library(Matrix.utils)
+library(tibble)
+library(ggplot2)
+library(scater)
+library(patchwork)
+library(statmod)
+library(harmony)
+library(gprofiler2)
+library(clusterProfiler)
+library(org.Mm.eg.db)
+library(AnnotationHub)
+library(ReactomePA)
+library(statmod)
+library(edgeR)
+library(speckle)
+library(EnhancedVolcano)
+library(decoupleR)
+library(OmnipathR)
+library(dorothea)
+library(enrichplot)
+library(png)
+library(reactable)
+library(UpSetR)
+library(ComplexHeatmap)
+library(msigdbr)
+library(simplifyEnrichment)
+library(igraph)
+library(gridExtra) 
+library(ggpubr)
+library(DOSE)
+
+#Output paths
+output_dir_data <- here::here("output", current_file)
+if (!dir.exists(output_dir_data)) dir.create(output_dir_data)
+
+if (!dir.exists(here::here("docs", "figure"))) dir.create(here::here("docs", "figure"))
+
+output_dir_figs <- here::here("docs", "figure", paste0(current_file, ".Rmd"))
+if (!dir.exists(output_dir_figs)) dir.create(output_dir_figs)
+```
+
+Load dataset
+
+```{r readRDS}
+Lung_integrated <- readRDS(here::here("output", "Lung_QC_integration_annotation", "Lung_integrated.rds"))
+Lung_integrated$Group <- factor(Lung_integrated$Group, levels = c("WT", "Fosl2tg"))
+```
+
+## Differential abundance analysis
+
+```{r metadata}
+metadata <- Lung_integrated@meta.data %>%
+  dplyr::select(Sample, Group) %>%
+  unique() %>%
+  dplyr::arrange(match(Sample, names(table(Lung_integrated$Sample))))
+
+rownames(metadata) <- metadata$Sample
+
+all.equal(metadata$Sample, names(table(Lung_integrated$Sample)))
+
+reactable(metadata, 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+```
+
+```{r Speckle_Group, fig.height=10, fig.width=18}
+props <- getTransformedProps(Lung_integrated$cell_type, Lung_integrated$Sample, transform="logit")
+
+design <- model.matrix(~ 0 + metadata$Group)
+colnames(design) <- c("Fosl2tg", "WT")
+mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
+differential_abundance<- propeller.ttest(props, design, contrasts = mycontr, robust=TRUE, trend=FALSE, sort=TRUE)
+
+write.csv(differential_abundance, file = here::here(output_dir_data, "Differential_Abundance.csv"), row.names = F)
+
+reactable(differential_abundance, 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+
+par(mfrow = c(3, 5), mar = c(4, 5, 3, 1))
+
+for (i in seq(1, 15, 1)) {
+  # Create boxplot first
+  boxplot(props$Proportions[i, ] ~ metadata$Group,
+          outline = FALSE,  # don't show outliers separately
+          col = c("lightblue", "lightcoral"),
+          ylab = "Proportions",
+          xlab = "",
+          cex.lab = 2, cex.axis = 2,
+          main = rownames(props$Proportions)[i],
+          cex.main = 2.4) 
+
+  # Add jittered points on top
+  stripchart(props$Proportions[i, ] ~ metadata$Group,
+             vertical = TRUE, method = "jitter",
+             pch = 16, cex = 2,
+             col = c("blue3", "red3"),
+             add = TRUE) 
+  }
+```
+
+```{r proportions}
+proportions <- as.data.frame(props$Proportions) %>%   
+  pivot_wider(
+    names_from  = clusters,  
+    values_from = Freq       
+  )
+
+write.csv(proportions, file = here::here(output_dir_data, "Proportions.csv"), row.names = F)
+```
+
+```{r subset}
+DC <- subset(Lung_integrated, cell_type == "Dendritic cells")
+Mono <- subset(Lung_integrated, cell_type == "Monocytes")
+Int <- subset(Lung_integrated, cell_type == "Interstitial macrophages")
+Alv <- subset(Lung_integrated, cell_type == "Alveolar macrophages")
+table(DC$Sample)
+table(Mono$Sample)
+table(Int$Sample)
+table(Alv$Sample)
+```
+
+```{r Cell_type_sample_table, fig.height=2, fig.width=11, message=FALSE, warning=FALSE}
+Myeloid <- subset(Lung_integrated, cell_type %in% c("Dendritic cells", "Monocytes", "Interstitial macrophages", "Alveolar macrophages"))
+
+Myeloid$cell_type <- factor(Myeloid$cell_type, levels = c("Alveolar macrophages",
+                                                                        "Monocytes",
+                                                                        "Dendritic cells",
+                                                                        "Interstitial macrophages")
+                                    )
+
+metadata_df <- Myeloid@meta.data
+
+# Create a contingency table with cell types as rows and samples as columns
+cell_type_sample_table <- table(Myeloid$cell_type, Myeloid$Sample)
+
+# Convert the table to a data frame for easier manipulation
+cell_type_sample_df <- as.data.frame.matrix(cell_type_sample_table)
+
+# Add the totals per sample (column-wise sum) as the last row
+cell_type_sample_df["Total", ] <- colSums(cell_type_sample_df)
+
+# Add the totals per cell type (row-wise sum) as the last column
+cell_type_sample_df$Total <- rowSums(cell_type_sample_df)
+
+table_plot <- tableGrob(cell_type_sample_df)
+
+ggsave(here::here(output_dir_figs, "cell_type_sample_table.png"), plot = table_plot, dpi = 600, width = 11, height = 2)
+
+# Include the image in the markdown document
+knitr::include_graphics(here::here(output_dir_figs, "cell_type_sample_table.png"), error = FALSE, dpi = 300)
+```
+
+## Differential expression analysis
+
+```{r empty_objects_DE}
+results <- list()
+signif <- list()
+volcano <- list()
+```
+
+```{r DE_Alv}
+expr_matrix <- GetAssayData(object = Alv, assay = "RNA", slot = "counts")
+non_zero_cells <- rowSums(expr_matrix > 0)
+total_cells <- ncol(expr_matrix)
+percent_cells <- (non_zero_cells / total_cells) * 100
+percent_stats_Alv <- data.frame(gene = rownames(expr_matrix), percentCells = percent_cells)
+
+keep_genes <- rownames(dplyr::filter(percent_stats_Alv, percentCells > 1))
+data <- Alv[which(rownames(Alv) %in% keep_genes),]
+
+pseudocounts_Alv <- Seurat2PB(data, sample="Sample", cluster = "cell_type")
+colnames(pseudocounts_Alv) <- pseudocounts_Alv$samples$sample
+keep_samples <- pseudocounts_Alv$samples$lib.size > 3e4
+keep_samples
+pseudocounts_Alv <- pseudocounts_Alv[, keep_samples]
+keep_genes <- filterByExpr(pseudocounts_Alv)
+pseudocounts_Alv <- pseudocounts_Alv[keep_genes, ]
+
+design <- model.matrix(~ 0 + metadata$Group)
+colnames(design) <- c("WT", "Fosl2tg")
+mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
+
+pseudocounts_Alv <- normLibSizes(pseudocounts_Alv)
+pseudocounts_Alv <- estimateDisp(pseudocounts_Alv, design)
+
+fit <- glmQLFit(pseudocounts_Alv, design, robust=TRUE)
+fit <- glmQLFTest(fit, contrast = mycontr)
+  
+results[[1]] <- topTags(fit, n = Inf)$table
+results[[1]] <- merge(results[[1]], percent_stats_Alv[, c("gene", "percentCells")], by = "gene", all.x = FALSE)
+signif[[1]] <- results[[1]] %>% dplyr::filter(FDR < 0.05, abs(logFC) > 0.5) %>% 
+  dplyr::arrange(FDR)
+
+names(results)[1] <- "Alveolar macrophages"
+names(signif)[1] <- "Alveolar macrophages"
+  
+write.csv(results[[1]], file = here::here(output_dir_data, paste0("DE_Results_Alveolar_macrophages.csv")), row.names = F)
+write.csv(signif[[1]], file = here::here(output_dir_data, paste0("DE_Signif_Alveolar_macrophages.csv")), row.names = F)
+  
+
+keyvals <- rep("grey", nrow(results[[1]]))
+names(keyvals) <- rep("Not significant", nrow(results[[1]]))
+keyvals[results[[1]]$logFC > 0.5 & results[[1]]$FDR < 0.05] <- "#A63A2A"
+names(keyvals)[keyvals == "#A63A2A"] <- "Increased"
+keyvals[results[[1]]$logFC < -0.5 & results[[1]]$FDR < 0.05] <- "#004C8C"
+names(keyvals)[keyvals == "#004C8C"] <- "Decreased"
+
+volcano[[1]] <- EnhancedVolcano(results[[1]],
+                lab = results[[1]]$gene,
+                x = "logFC",
+                y = "FDR",
+                ylab = bquote(~-Log[10] ~ italic(FDR)),
+                labSize = 0,
+                titleLabSize = 16,
+                subtitleLabSize = 0,
+                axisLabSize = 12,
+                captionLabSize = 0,
+                pointSize = 0.5,
+                FCcutoff = 0.5,
+                pCutoff  = 0.05,
+                ylim = c(0, 4),
+                colCustom = keyvals,
+                colAlpha = 1,
+                drawConnectors = FALSE,
+                subtitle = NULL,
+                title = "Alveolar macrophages"
+) + theme(legend.position = "none")
+names(volcano)[1] <- "Alveolar macrophages"
+```
+
+```{r DE_DC}
+expr_matrix <- GetAssayData(object = DC, assay = "RNA", slot = "counts")
+non_zero_cells <- rowSums(expr_matrix > 0)
+total_cells <- ncol(expr_matrix)
+percent_cells <- (non_zero_cells / total_cells) * 100
+percent_stats_DC <- data.frame(gene = rownames(expr_matrix), percentCells = percent_cells)
+
+keep_genes <- rownames(dplyr::filter(percent_stats_DC, percentCells > 1))
+data <- DC[which(rownames(DC) %in% keep_genes),]
+
+pseudocounts_DC <- Seurat2PB(data, sample="Sample", cluster = "cell_type")
+colnames(pseudocounts_DC) <- pseudocounts_DC$samples$sample
+keep_samples <- pseudocounts_DC$samples$lib.size > 3e4
+keep_samples
+pseudocounts_DC <- pseudocounts_DC[, keep_samples]
+keep_genes <- filterByExpr(pseudocounts_DC)
+pseudocounts_DC <- pseudocounts_DC[keep_genes, ]
+
+design <- model.matrix(~ 0 + metadata$Group)
+colnames(design) <- c("WT", "Fosl2tg")
+mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
+
+pseudocounts_DC <- normLibSizes(pseudocounts_DC)
+pseudocounts_DC <- estimateDisp(pseudocounts_DC, design)
+
+fit <- glmQLFit(pseudocounts_DC, design, robust=TRUE)
+fit <- glmQLFTest(fit, contrast = mycontr)
+  
+results[[2]] <- topTags(fit, n = Inf)$table
+results[[2]] <- merge(results[[2]], percent_stats_DC[, c("gene", "percentCells")], by = "gene", all.x = FALSE)
+signif[[2]] <- results[[2]] %>% dplyr::filter(FDR < 0.05, abs(logFC) > 0.5) %>% 
+  dplyr::arrange(FDR)
+
+names(results)[2] <- "Dendritic cells"
+names(signif)[2] <- "Dendritic cells"
+  
+write.csv(results[[2]], file = here::here(output_dir_data, paste0("DE_Results_Dendritic_cells.csv")), row.names = F)
+write.csv(signif[[2]], file = here::here(output_dir_data, paste0("DE_Signif_Dendritic_cells.csv")), row.names = F)
+  
+
+keyvals <- rep("grey", nrow(results[[2]]))
+names(keyvals) <- rep("Not significant", nrow(results[[2]]))
+keyvals[results[[2]]$logFC > 0.5 & results[[2]]$FDR < 0.05] <- "#A63A2A"
+names(keyvals)[keyvals == "#A63A2A"] <- "Increased"
+keyvals[results[[2]]$logFC < -0.5 & results[[2]]$FDR < 0.05] <- "#004C8C"
+names(keyvals)[keyvals == "#004C8C"] <- "Decreased"
+
+volcano[[2]] <- EnhancedVolcano(results[[2]],
+                lab = results[[2]]$gene,
+                x = "logFC",
+                y = "FDR",
+                ylab = bquote(~-Log[10] ~ italic(FDR)),
+                labSize = 0,
+                titleLabSize = 16,
+                subtitleLabSize = 0,
+                axisLabSize = 12,
+                captionLabSize = 0,
+                pointSize = 0.5,
+                FCcutoff = 0.5,
+                pCutoff  = 0.05,
+                ylim = c(0, 3),
+                colCustom = keyvals,
+                colAlpha = 1,
+                drawConnectors = FALSE,
+                subtitle = NULL,
+                title = "Dendritic cells"
+) + theme(legend.position = "none")
+names(volcano)[2] <- "Dendritic_cells"
+```
+
+```{r DE_Mono}
+expr_matrix <- GetAssayData(object = Mono, assay = "RNA", slot = "counts")
+non_zero_cells <- rowSums(expr_matrix > 0)
+total_cells <- ncol(expr_matrix)
+percent_cells <- (non_zero_cells / total_cells) * 100
+percent_stats_Mono <- data.frame(gene = rownames(expr_matrix), percentCells = percent_cells)
+
+keep_genes <- rownames(dplyr::filter(percent_stats_Mono, percentCells > 1))
+data <- Mono[which(rownames(Mono) %in% keep_genes),]
+
+pseudocounts_Mono <- Seurat2PB(data, sample="Sample", cluster = "cell_type")
+colnames(pseudocounts_Mono) <- pseudocounts_Mono$samples$sample
+keep_samples <- pseudocounts_Mono$samples$lib.size > 3e4
+keep_samples
+pseudocounts_Mono <- pseudocounts_Mono[, keep_samples]
+keep_genes <- filterByExpr(pseudocounts_Mono)
+pseudocounts_Mono <- pseudocounts_Mono[keep_genes, ]
+
+metadata_subset <- metadata %>%
+  dplyr::filter(Sample %in% pseudocounts_Mono$samples$sample)
+
+design <- model.matrix(~ 0 + metadata_subset$Group)
+colnames(design) <- c("WT", "Fosl2tg")
+mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
+
+pseudocounts_Mono <- normLibSizes(pseudocounts_Mono)
+pseudocounts_Mono <- estimateDisp(pseudocounts_Mono, design)
+
+fit <- glmQLFit(pseudocounts_Mono, design, robust=TRUE)
+fit <- glmQLFTest(fit, contrast = mycontr)
+  
+results[[3]] <- topTags(fit, n = Inf)$table
+results[[3]] <- merge(results[[3]], percent_stats_Mono[, c("gene", "percentCells")], by = "gene", all.x = FALSE)
+signif[[3]] <- results[[3]] %>% dplyr::filter(FDR < 0.05, abs(logFC) > 0.5) %>% 
+  dplyr::arrange(FDR)
+
+names(results)[3] <- "Monocytes"
+names(signif)[3] <- "Monocytes"
+  
+write.csv(results[[3]], file = here::here(output_dir_data, paste0("DE_Results_Monocytes.csv")), row.names = F)
+write.csv(signif[[3]], file = here::here(output_dir_data, paste0("DE_Signif_Monocytes.csv")), row.names = F)
+  
+
+keyvals <- rep("grey", nrow(results[[3]]))
+names(keyvals) <- rep("Not significant", nrow(results[[3]]))
+keyvals[results[[3]]$logFC > 0.5 & results[[3]]$FDR < 0.05] <- "#A63A2A"
+names(keyvals)[keyvals == "#A63A2A"] <- "Increased"
+keyvals[results[[3]]$logFC < -0.5 & results[[3]]$FDR < 0.05] <- "#004C8C"
+names(keyvals)[keyvals == "#004C8C"] <- "Decreased"
+
+volcano[[3]] <- EnhancedVolcano(results[[3]],
+                lab = results[[3]]$gene,
+                x = "logFC",
+                y = "FDR",
+                ylab = bquote(~-Log[10] ~ italic(FDR)),
+                labSize = 0,
+                titleLabSize = 16,
+                subtitleLabSize = 0,
+                axisLabSize = 12,
+                captionLabSize = 0,
+                pointSize = 0.5,
+                FCcutoff = 0.5,
+                pCutoff  = 0.05,
+                ylim = c(0, 6),
+                colCustom = keyvals,
+                colAlpha = 1,
+                drawConnectors = FALSE,
+                subtitle = NULL,
+                title = "Monocytes"
+) + theme(legend.position = "none")
+names(volcano)[3] <- "Monocytes"
+```
+
+```{r DE_Int}
+expr_matrix <- GetAssayData(object = Int, assay = "RNA", slot = "counts")
+non_zero_cells <- rowSums(expr_matrix > 0)
+total_cells <- ncol(expr_matrix)
+percent_cells <- (non_zero_cells / total_cells) * 100
+percent_stats_Int <- data.frame(gene = rownames(expr_matrix), percentCells = percent_cells)
+
+keep_genes <- rownames(dplyr::filter(percent_stats_Int, percentCells > 1))
+data <- Int[which(rownames(Int) %in% keep_genes),]
+
+pseudocounts_Int <- Seurat2PB(data, sample="Sample", cluster = "cell_type")
+colnames(pseudocounts_Int) <- pseudocounts_Int$samples$sample
+keep_samples <- pseudocounts_Int$samples$lib.size > 3e4
+keep_samples
+pseudocounts_Int <- pseudocounts_Int[, keep_samples]
+keep_genes <- filterByExpr(pseudocounts_Int)
+pseudocounts_Int <- pseudocounts_Int[keep_genes, ]
+
+metadata_subset <- metadata %>%
+  dplyr::filter(Sample %in% pseudocounts_Int$samples$sample)
+
+design <- model.matrix(~ 0 + metadata_subset$Group)
+colnames(design) <- c("WT", "Fosl2tg")
+mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
+
+pseudocounts_Int <- normLibSizes(pseudocounts_Int)
+pseudocounts_Int <- estimateDisp(pseudocounts_Int, design)
+
+fit <- glmQLFit(pseudocounts_Int, design, robust=TRUE)
+fit <- glmQLFTest(fit, contrast = mycontr)
+  
+results[[4]] <- topTags(fit, n = Inf)$table
+results[[4]] <- merge(results[[4]], percent_stats_Int[, c("gene", "percentCells")], by = "gene", all.x = FALSE)
+signif[[4]] <- results[[4]] %>% dplyr::filter(FDR < 0.05, abs(logFC) > 0.5) %>% 
+  dplyr::arrange(FDR)
+
+names(results)[4] <- "Interstitial macrophages"
+names(signif)[4] <- "Interstitial macrophages"
+  
+write.csv(results[[4]], file = here::here(output_dir_data, paste0("DE_Results_Interstitial_macrophages.csv")), row.names = F)
+write.csv(signif[[4]], file = here::here(output_dir_data, paste0("DE_Signif_Interstitial_macrophages.csv")), row.names = F)
+  
+
+keyvals <- rep("grey", nrow(results[[4]]))
+names(keyvals) <- rep("Not significant", nrow(results[[4]]))
+keyvals[results[[4]]$logFC > 0.5 & results[[4]]$FDR < 0.05] <- "#A63A2A"
+names(keyvals)[keyvals == "#A63A2A"] <- "Increased"
+keyvals[results[[4]]$logFC < -0.5 & results[[4]]$FDR < 0.05] <- "#004C8C"
+names(keyvals)[keyvals == "#004C8C"] <- "Decreased"
+
+volcano[[4]] <- EnhancedVolcano(results[[4]],
+                lab = results[[4]]$gene,
+                x = "logFC",
+                y = "FDR",
+                ylab = bquote(~-Log[10] ~ italic(FDR)),
+                labSize = 0,
+                titleLabSize = 16,
+                subtitleLabSize = 0,
+                axisLabSize = 12,
+                captionLabSize = 0,
+                pointSize = 0.5,
+                FCcutoff = 0.5,
+                pCutoff  = 0.05,
+                ylim = c(0, 10),
+                colCustom = keyvals,
+                colAlpha = 1,
+                drawConnectors = FALSE,
+                subtitle = NULL,
+                title = "Interstitial macrophages"
+) + theme(legend.position = "none")
+names(volcano)[4] <- "Interstitial macrophages"
+```
+
+```{r Volcano_all_metadata, fig.height=4, fig.width=13.5}
+print((volcano[[1]] | volcano[[2]] | volcano[[3]] | volcano[[4]]))
+```
+
+```{r results_Alv}
+reactable(dplyr::select(results[["Alveolar macrophages"]], c("gene", "logFC", "logCPM", "FDR", "percentCells")), 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+```
+
+```{r results_DC}
+reactable(dplyr::select(results[["Dendritic cells"]], c("gene", "logFC", "logCPM", "FDR", "percentCells")), 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+```
+
+```{r results_Mono}
+reactable(dplyr::select(results[["Monocytes"]], c("gene", "logFC", "logCPM", "FDR", "percentCells")), 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+```
+
+```{r results_Int}
+reactable(dplyr::select(results[["Interstitial macrophages"]], c("gene", "logFC", "logCPM", "FDR", "percentCells")), 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+```
+
+```{r UpSet_plot_DE_up, fig.height=4, fig.width=6}
+gene_sets <- list()
+gene_sets[["Alveolar macrophages"]] <- dplyr::filter(signif[["Alveolar macrophages"]], logFC > 0)$gene
+gene_sets[["Dendritic cells"]] <- dplyr::filter(signif[["Dendritic cells"]], logFC > 0)$gene
+gene_sets[["Monocytes"]] <- dplyr::filter(signif[["Monocytes"]], logFC > 0)$gene
+gene_sets[["Interstitial macrophages"]] <- dplyr::filter(signif[["Interstitial macrophages"]], logFC > 0)$gene
+
+m <- make_comb_mat(gene_sets, mode = "intersect", min_set_size = 1)
+m <- m[comb_degree(m) >= 2]
+m <- m[comb_size(m) >= 1]
+
+UpSet(m, column_title = "Upregulated genes", comb_order = order(comb_size(m)), 
+                    top_annotation = upset_top_annotation(m, add_numbers = TRUE),
+                    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+```
+
+```{r UpSet_plot_DE_down, fig.height=4, fig.width=6}
+gene_sets <- list()
+gene_sets[["Alveolar macrophages"]] <- dplyr::filter(signif[["Alveolar macrophages"]], logFC<0)$gene
+gene_sets[["Dendritic cells"]] <- dplyr::filter(signif[["Dendritic cells"]], logFC<0)$gene
+gene_sets[["Monocytes"]] <- dplyr::filter(signif[["Monocytes"]], logFC<0)$gene
+gene_sets[["Interstitial macrophages"]] <- dplyr::filter(signif[["Interstitial macrophages"]], logFC<0)$gene
+
+m <- make_comb_mat(gene_sets, mode = "intersect", min_set_size = 1)
+m <- m[comb_degree(m) >= 2]
+m <- m[comb_size(m) >= 1]
+
+UpSet(m, column_title = "Downregulated genes", comb_order = order(comb_size(m)), 
+                    top_annotation = upset_top_annotation(m, add_numbers = TRUE),
+                    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+```
+
+## Gene set enrichment analysis
+
+```{r reorder_GO_by_pvalue}
+reorder_GO_by_pvalue <- function(enrichGO_result) {
+  go_results <- enrichGO_result@result
+  go_results_sorted <- go_results[order(go_results$p.adjust), ]
+  enrichGO_result@result <- go_results_sorted
+  return(enrichGO_result)
+}
+```
+
+```{r reorder_GO_by_NES}
+reorder_GO_by_NES <- function(enrichGO_result) {
+  go_results <- enrichGO_result@result
+  go_results_sorted <- go_results[order(desc(go_results$NES)), ]
+  enrichGO_result@result <- go_results_sorted
+  return(enrichGO_result)
+}
+```
+
+```{r default_labeller}
+default_labeller <- function(n) {
+    function(str){
+        str <- gsub("_", " ", str)
+        ep_str_wrap(str, n)
+    }
+}
+```
+
+```{r barplot.enrichResult}
+barplot.enrichResult <- function (height, x = "Count", color = "p.adjust", showCategory = 8, 
+  font.size = 12, title = "", label_format = 30, ...) 
+{
+  object <- height
+  colorBy <- match.arg(color, c("pvalue", "p.adjust", "qvalue"))
+  if (x == "geneRatio" || x == "GeneRatio") {
+    x <- "GeneRatio"
+  }
+  else if (x == "count" || x == "Count") {
+    x <- "Count"
+  }
+  df <- fortify(object, showCategory = showCategory, by = x, 
+    ...)
+  if (colorBy %in% colnames(df)) {
+    p <- ggplot(df, aes_string(x = x, y = "Description", 
+      fill = colorBy)) + theme_dose(font.size) + set_enrichplot_color(type = "fill", 
+      name = color)
+  }
+  else {
+    p <- ggplot(df, aes_string(x = x, y = "Description", 
+      fill = "Description")) + theme_dose(font.size) + 
+      theme(legend.position = "none")
+  }
+  label_func <- default_labeller(label_format)
+  if (is.function(label_format)) {
+    label_func <- label_format
+  }
+  p + geom_col() + scale_y_discrete(labels = label_func) + 
+    ggtitle(title) + ylab(NULL)
+}
+```
+
+```{r ep_str_wrap}
+ep_str_wrap <- function(string, width) {
+    x <- gregexpr(' ', string)
+    vapply(seq_along(x),
+           FUN = function(i) {
+               y <- x[[i]]
+               n <- nchar(string[i])
+               len <- (c(y,n) - c(0, y)) ## length + 1
+               idx <- len > width
+               j <- which(!idx)
+               if (length(j) && max(j) == length(len)) {
+                   j <- j[-length(j)]
+               }
+               if (length(j)) {
+                   idx[j] <- len[j] + len[j+1] > width
+               }
+               idx <- idx[-length(idx)] ## length - 1
+               start <- c(1, y[idx] + 1)
+               end <- c(y[idx] - 1, n)
+               words <- substring(string[i], start, end)
+               paste0(words, collapse="\n")
+           },
+           FUN.VALUE = character(1)
+    )
+}
+```
+
+```{r classify_terms}
+classify_terms <- function(df) {
+  df$sign <- ifelse(df$NES > 0, "activated", "suppressed")
+  return(df)
+}
+```
+
+```{r ranked_genes_Alv}
+results[["Alveolar macrophages"]]$metric <- results[["Alveolar macrophages"]]$logFC*-log10(results[["Alveolar macrophages"]]$PValue)
+entrezid <- bitr(results[["Alveolar macrophages"]]$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db", drop = TRUE)
+results[["Alveolar macrophages"]] <- merge(results[["Alveolar macrophages"]], entrezid, by.x = "gene", by.y = "SYMBOL", all.x = TRUE)
+results[["Alveolar macrophages"]][duplicated(results[["Alveolar macrophages"]]$metric) | duplicated(results[["Alveolar macrophages"]]$metric, fromLast = TRUE),]
+results[["Alveolar macrophages"]] <- results[["Alveolar macrophages"]][!duplicated(results[["Alveolar macrophages"]]$metric), ]
+reactable(results[["Alveolar macrophages"]], 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+ranked_genes_Alv <- results[["Alveolar macrophages"]][!is.na(results[["Alveolar macrophages"]]$ENTREZID), ]
+genelist_Alv <- ranked_genes_Alv$metric
+names(genelist_Alv) <-ranked_genes_Alv$ENTREZID
+genelist_Alv <- genelist_Alv[order(genelist_Alv, decreasing = T)]
+```
+
+```{r ranked_genes_DC}
+results[["Dendritic cells"]]$metric <- results[["Dendritic cells"]]$logFC*-log10(results[["Dendritic cells"]]$PValue)
+entrezid <- bitr(results[["Dendritic cells"]]$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db", drop = TRUE)
+results[["Dendritic cells"]] <- merge(results[["Dendritic cells"]], entrezid, by.x = "gene", by.y = "SYMBOL", all.x = TRUE)
+results[["Dendritic cells"]][duplicated(results[["Dendritic cells"]]$metric) | duplicated(results[["Dendritic cells"]]$metric, fromLast = TRUE),]
+results[["Dendritic cells"]] <- results[["Dendritic cells"]][!duplicated(results[["Dendritic cells"]]$metric), ]
+reactable(results[["Dendritic cells"]], 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+ranked_genes_DC <- results[["Dendritic cells"]][!is.na(results[["Dendritic cells"]]$ENTREZID), ]
+genelist_DC <- ranked_genes_DC$metric
+names(genelist_DC) <-ranked_genes_DC$ENTREZID
+genelist_DC <- genelist_DC[order(genelist_DC, decreasing = T)]
+```
+
+```{r ranked_genes_Mono}
+results[["Monocytes"]]$metric <- results[["Monocytes"]]$logFC*-log10(results[["Monocytes"]]$PValue)
+entrezid <- bitr(results[["Monocytes"]]$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db", drop = TRUE)
+results[["Monocytes"]] <- merge(results[["Monocytes"]], entrezid, by.x = "gene", by.y = "SYMBOL", all.x = TRUE)
+results[["Monocytes"]][duplicated(results[["Monocytes"]]$metric) | duplicated(results[["Monocytes"]]$metric, fromLast = TRUE),]
+results[["Monocytes"]] <- results[["Monocytes"]][!duplicated(results[["Monocytes"]]$metric), ]
+reactable(results[["Monocytes"]], 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+ranked_genes_Mono <- results[["Monocytes"]][!is.na(results[["Monocytes"]]$ENTREZID), ]
+genelist_Mono <- ranked_genes_Mono$metric
+names(genelist_Mono) <-ranked_genes_Mono$ENTREZID
+genelist_Mono <- genelist_Mono[order(genelist_Mono, decreasing = T)]
+```
+
+```{r ranked_genes_Int}
+results[["Interstitial macrophages"]]$metric <- results[["Interstitial macrophages"]]$logFC*-log10(results[["Interstitial macrophages"]]$PValue)
+entrezid <- bitr(results[["Interstitial macrophages"]]$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db", drop = TRUE)
+results[["Interstitial macrophages"]] <- merge(results[["Interstitial macrophages"]], entrezid, by.x = "gene", by.y = "SYMBOL", all.x = TRUE)
+results[["Interstitial macrophages"]][duplicated(results[["Interstitial macrophages"]]$metric) | duplicated(results[["Interstitial macrophages"]]$metric, fromLast = TRUE),]
+results[["Interstitial macrophages"]] <- results[["Interstitial macrophages"]][!duplicated(results[["Interstitial macrophages"]]$metric), ]
+reactable(results[["Interstitial macrophages"]], 
+          filterable = TRUE,
+          searchable = TRUE,
+          showPageSizeOptions = TRUE)
+ranked_genes_Int <- results[["Interstitial macrophages"]][!is.na(results[["Interstitial macrophages"]]$ENTREZID), ]
+genelist_Int <- ranked_genes_Int$metric
+names(genelist_Int) <-ranked_genes_Int$ENTREZID
+genelist_Int <- genelist_Int[order(genelist_Int, decreasing = T)]
+```
+
+```{r GSEA_GO_Alv}
+GSEA_GO_Alv <- gseGO(geneList = genelist_Alv,
+                OrgDb = org.Mm.eg.db,
+                ont = "ALL",
+                keyType = "ENTREZID",
+                nPermSimple = 10000,
+                minGSSize = 10,
+                pvalueCutoff = 0.1,
+                seed = 123)
+GSEA_GO_Alv <- reorder_GO_by_pvalue(GSEA_GO_Alv)
+
+saveRDS(GSEA_GO_Alv, here::here(output_dir_data, "GSEA_GO_Alveolar_macrophages.rds"))
+```
+
+```{r GSEA_KEGG_Alv}
+GSEA_KEGG_Alv <- gseKEGG(geneList = genelist_Alv,
+                organism = "mmu",
+                keyType = "kegg",
+                nPermSimple = 10000,
+                pvalueCutoff = 0.1,
+                seed = 123)
+
+saveRDS(GSEA_KEGG_Alv, here::here(output_dir_data, "GSEA_KEGG_Alveolar_macrophages.rds"))
+```
+
+```{r GSEA_GO_DC}
+GSEA_GO_DC <- gseGO(geneList = genelist_DC,
+                OrgDb = org.Mm.eg.db,
+                ont = "ALL",
+                keyType = "ENTREZID",
+                nPermSimple = 10000,
+                minGSSize = 10,
+                pvalueCutoff = 0.1,
+                seed = 123)
+GSEA_GO_DC <- reorder_GO_by_pvalue(GSEA_GO_DC)
+
+saveRDS(GSEA_GO_DC, here::here(output_dir_data, "GSEA_GO_Dendritic_cells.rds"))
+```
+
+```{r GSEA_KEGG_DC}
+GSEA_KEGG_DC <- gseKEGG(geneList = genelist_DC,
+                organism = "mmu",
+                keyType = "kegg",
+                nPermSimple = 10000,
+                pvalueCutoff = 0.1,
+                seed = 123)
+saveRDS(GSEA_KEGG_DC, here::here(output_dir_data, "GSEA_KEGG_Dendritic_cells.rds"))
+```
+
+```{r GSEA_GO_Mono}
+GSEA_GO_Mono <- gseGO(geneList = genelist_Mono,
+                OrgDb = org.Mm.eg.db,
+                ont = "ALL",
+                keyType = "ENTREZID",
+                nPermSimple = 10000,
+                minGSSize = 10,
+                pvalueCutoff = 0.1,
+                seed = 123)
+GSEA_GO_Mono <- reorder_GO_by_pvalue(GSEA_GO_Mono)
+
+saveRDS(GSEA_GO_Mono, here::here(output_dir_data, "GSEA_GO_Monocytes.rds"))
+```
+
+```{r GSEA_KEGG_Mono}
+GSEA_KEGG_Mono <- gseKEGG(geneList = genelist_Mono,
+                organism = "mmu",
+                keyType = "kegg",
+                nPermSimple = 10000,
+                pvalueCutoff = 0.1,
+                seed = 123)
+saveRDS(GSEA_KEGG_Mono, here::here(output_dir_data, "GSEA_KEGG_Monocytes.rds"))
+```
+
+```{r GSEA_GO_Int}
+GSEA_GO_Int <- gseGO(geneList = genelist_Int,
+                OrgDb = org.Mm.eg.db,
+                ont = "ALL",
+                keyType = "ENTREZID",
+                nPermSimple = 10000,
+                minGSSize = 10,
+                pvalueCutoff = 0.1,
+                seed = 123)
+GSEA_GO_Int <- reorder_GO_by_pvalue(GSEA_GO_Int)
+
+saveRDS(GSEA_GO_Int, here::here(output_dir_data, "GSEA_GO_Interstitial_macrophages.rds"))
+```
+
+```{r GSEA_KEGG_Int}
+GSEA_KEGG_Int <- gseKEGG(geneList = genelist_Int,
+                organism = "mmu",
+                keyType = "kegg",
+                nPermSimple = 10000,
+                pvalueCutoff = 0.1,
+                seed = 123)
+saveRDS(GSEA_KEGG_Int, here::here(output_dir_data, "GSEA_KEGG_Interstitial_macrophages.rds"))
+```
+
+```{r nrow GSEA_GO}
+nrow(GSEA_GO_Alv)
+nrow(GSEA_GO_DC)
+nrow(GSEA_GO_Mono)
+nrow(GSEA_GO_Int)
+```
+
+```{r nrow GSEA_KEGG}
+nrow(GSEA_KEGG_Alv)
+nrow(GSEA_KEGG_DC)
+nrow(GSEA_KEGG_Mono)
+nrow(GSEA_KEGG_Int)
+```
+
+```{r GSEA_GO_Alv_barplot, fig.height=8, fig.width=10}
+gsea_top20 <- GSEA_GO_Alv %>%
+  head(20)
+
+gsea_plot <- GSEA_GO_Alv
+gsea_plot@result <- gsea_top20
+
+go1 <- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x="NES", showCategory = 25, label_format = 25) + 
+  ggtitle("Gene Ontology Enrichment Analysis\nAlveolar macrophages") + 
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+go1
+```
+
+```{r GSEA_GO_Mono_barplot, fig.height=8, fig.width=10}
+gsea_top20 <- GSEA_GO_Mono %>%
+  head(20)
+
+gsea_plot <- GSEA_GO_Mono
+gsea_plot@result <- gsea_top20
+
+go3 <- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x="NES", showCategory = 25, label_format = 25) + 
+  ggtitle("Gene Ontology Enrichment Analysis\nMonocytes") + 
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+go3
+```
+
+```{r GSEA_GO_Int_barplot, fig.height=8, fig.width=10}
+gsea_top20 <- GSEA_GO_Int %>%
+  head(20)
+
+gsea_plot <- GSEA_GO_Int
+gsea_plot@result <- gsea_top20
+
+go3 <- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x="NES", showCategory = 25, label_format = 25) + 
+  ggtitle("Gene Ontology Enrichment Analysis\nInterstitial macrophages") + 
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+go3
+```
+
+```{r GSEA_GO_Alv_emapplot, fig.height=6, fig.width=13}
+GSEA_GO_Alv@result <- classify_terms(GSEA_GO_Alv@result)
+
+activated_terms <- subset(GSEA_GO_Alv@result, sign == "activated")
+suppressed_terms <- subset(GSEA_GO_Alv@result, sign == "suppressed")
+
+GSEA_GO_activated <- GSEA_GO_Alv
+GSEA_GO_activated@result <- activated_terms
+GSEA_GO_activated <- pairwise_termsim(GSEA_GO_activated)
+
+GSEA_GO_suppressed <- GSEA_GO_Alv
+GSEA_GO_suppressed@result <- suppressed_terms
+GSEA_GO_suppressed <- pairwise_termsim(GSEA_GO_suppressed)
+
+p1 <- emapplot(GSEA_GO_activated, showCategory = 100, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Activated Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+p2 <- emapplot(GSEA_GO_suppressed, showCategory = 100, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Suppressed Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+(p1 | p2) + 
+  plot_annotation(title = "Alveolar macrophages") & 
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5)
+  )
+```
+
+```{r GSEA_GO_Mono_emapplot, fig.height=8, fig.width=16}
+GSEA_GO_Mono@result <- classify_terms(GSEA_GO_Mono@result)
+
+activated_terms <- subset(GSEA_GO_Mono@result, sign == "activated")
+suppressed_terms <- subset(GSEA_GO_Mono@result, sign == "suppressed")
+
+GSEA_GO_activated <- GSEA_GO_Mono
+GSEA_GO_activated@result <- activated_terms
+GSEA_GO_activated <- pairwise_termsim(GSEA_GO_activated)
+
+GSEA_GO_suppressed <- GSEA_GO_Mono
+GSEA_GO_suppressed@result <- suppressed_terms
+GSEA_GO_suppressed <- pairwise_termsim(GSEA_GO_suppressed)
+
+p1 <- emapplot(GSEA_GO_activated, showCategory = 50, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Activated Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+p2 <- emapplot(GSEA_GO_suppressed, showCategory = 50, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Suppressed Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+(p1 | p2) + 
+  plot_annotation(title = "Monocytes") & 
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5)
+  )
+```
+
+```{r GSEA_GO_Int_emapplot, fig.height=8, fig.width=16}
+GSEA_GO_Int@result <- classify_terms(GSEA_GO_Int@result)
+
+activated_terms <- subset(GSEA_GO_Int@result, sign == "activated")
+suppressed_terms <- subset(GSEA_GO_Int@result, sign == "suppressed")
+
+GSEA_GO_activated <- GSEA_GO_Int
+GSEA_GO_activated@result <- activated_terms
+GSEA_GO_activated <- pairwise_termsim(GSEA_GO_activated)
+
+GSEA_GO_suppressed <- GSEA_GO_Int
+GSEA_GO_suppressed@result <- suppressed_terms
+GSEA_GO_suppressed <- pairwise_termsim(GSEA_GO_suppressed)
+
+p1 <- emapplot(GSEA_GO_activated, showCategory = 50, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Activated Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+p2 <- emapplot(GSEA_GO_suppressed, showCategory = 50, cex_label_category = 0.7, min_edge = 0.20) +
+  ggtitle("Suppressed Terms") +
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
+
+(p1 | p2) + 
+  plot_annotation(title = "Interstitial macrophages") & 
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5)
+  )
+```
+
+```{r heatmap_cols}
+heatmap_cols <- colorRampPalette(c("#004C8C", "white", "#A63A2A"))(101)
+```
+
+```{r de_genes_Alv}
+de_genes_Alv <- signif[["Alveolar macrophages"]] %>%
+  dplyr::arrange(FDR) %>%
+  head(20) %>%
+  dplyr::arrange(desc(logFC)) %>%
+  pull(gene)
+```
+
+```{r de_genes_DC}
+de_genes_DC <- signif[["Dendritic cells"]] %>%
+  dplyr::arrange(FDR) %>%
+  head(20) %>%
+  dplyr::arrange(desc(logFC)) %>%
+  pull(gene)
+```
+
+```{r de_genes_Mono}
+de_genes_Mono <- signif[["Monocytes"]] %>%
+  dplyr::arrange(FDR) %>%
+  head(20) %>%
+  dplyr::arrange(desc(logFC)) %>%
+  pull(gene)
+```
+
+```{r de_genes_Int}
+de_genes_Int <- signif[["Interstitial macrophages"]] %>%
+  dplyr::arrange(FDR) %>%
+  head(20) %>%
+  dplyr::arrange(desc(logFC)) %>%
+  pull(gene)
+```
+
+```{r Heatmap_Alv, fig.width=6, fig.height=6}
+counts <- cpm(pseudocounts_Alv, log = TRUE)
+counts <- counts[de_genes_Alv, ]
+metadata_heatmap <- dplyr::select(metadata, Group)
+
+title <- textGrob("Alveolar macrophages", gp = gpar(fontsize = 18, fontface = "bold"))
+
+heatmap <- pheatmap::pheatmap(
+  name = " ",
+  angle_col = "45",
+  counts,
+  color = heatmap_cols,   
+  scale = "row",
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  annotation_col = metadata_heatmap,
+  show_colnames = TRUE,          
+  annotation_legend = TRUE,          
+  border_color = NA,
+  fontsize = 10,
+  fontsize_row = 13,
+  fontsize_col = 8,
+  cellheight = 15,
+  gaps_col = c(0,0,0),
+  silent = TRUE
+  )
+
+grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))
+```
+
+```{r Heatmap_DC, fig.width=6, fig.height=6}
+counts <- cpm(pseudocounts_DC, log = TRUE)
+counts <- counts[de_genes_DC, ]
+metadata_heatmap <- dplyr::select(metadata, Group)
+
+title <- textGrob("Dendritic cells", gp = gpar(fontsize = 18, fontface = "bold"))
+
+heatmap <- pheatmap::pheatmap(
+  name = " ",
+  angle_col = "45",
+  counts,
+  color = heatmap_cols,   
+  scale = "row",
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  annotation_col = metadata_heatmap,
+  show_colnames = TRUE,          
+  annotation_legend = TRUE,          
+  border_color = NA,
+  fontsize = 10,
+  fontsize_row = 13,
+  fontsize_col = 8,
+  cellheight = 15,
+  gaps_col = c(0,0,0),
+  silent = TRUE
+  )
+
+grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))
+```
+
+```{r Heatmap_Mono, fig.width=6, fig.height=6}
+counts <- cpm(pseudocounts_Mono, log = TRUE)
+counts <- counts[de_genes_Mono, ]
+metadata_heatmap <- dplyr::select(metadata, Group)
+
+title <- textGrob("Monocytes", gp = gpar(fontsize = 18, fontface = "bold"))
+
+heatmap <- pheatmap::pheatmap(
+  name = " ",
+  angle_col = "45",
+  counts,
+  color = heatmap_cols,   
+  scale = "row",
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  annotation_col = metadata_heatmap,
+  show_colnames = TRUE,          
+  annotation_legend = TRUE,          
+  border_color = NA,
+  fontsize = 10,
+  fontsize_row = 13,
+  fontsize_col = 8,
+  cellheight = 15,
+  gaps_col = c(0,0,0),
+  silent = TRUE
+  )
+
+grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))
+```
+
+```{r Heatmap_Int, fig.width=6, fig.height=6}
+counts <- cpm(pseudocounts_Int, log = TRUE)
+counts <- counts[de_genes_Int, ]
+metadata_heatmap <- dplyr::select(metadata, Group)
+
+title <- textGrob("Interstitial macrophages", gp = gpar(fontsize = 18, fontface = "bold"))
+
+heatmap <- pheatmap::pheatmap(
+  name = " ",
+  angle_col = "45",
+  counts,
+  color = heatmap_cols,   
+  scale = "row",
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  annotation_col = metadata_heatmap,
+  show_colnames = TRUE,          
+  annotation_legend = TRUE,          
+  border_color = NA,
+  fontsize = 10,
+  fontsize_row = 13,
+  fontsize_col = 8,
+  cellheight = 15,
+  gaps_col = c(0,0,0),
+  silent = TRUE
+  )
+
+grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))
+```
