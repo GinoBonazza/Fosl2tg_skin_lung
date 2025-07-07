@@ -1,7 +1,7 @@
-name: "Fosl2tg_skin_lung"
+name: Fosl2tg_skin_lung
 output_dir: ../docs
 navbar:
-  title: "Fosl2tg_skin_lung"
+  title: Fosl2tg_skin_lung
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fab fa-github
+    text: Source code
+    href: https://github.com/GinoBonazza/Fosl2tg_skin_lung
 output:
   workflowr::wflow_html:
     toc: yes
