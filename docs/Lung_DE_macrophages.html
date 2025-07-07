@@ -12,7 +12,7 @@
 <meta name="author" content="GinoBonazza (ginoandrea.bonazza@usz.ch)" />
 
 
-<title>Differential abundance and differential expression analysis in myeloid cells</title>
+<title>Differential expression analysis in monocytes, macrophages, DC (Lung)</title>
 
 <script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -343,6 +343,12 @@ div.tocify {
   <a href="index.html">Home</a>
 </li>
 <li>
+  <a href="Lung_QC_integration_annotation.html">Lung - QC, integration, annotation</a>
+</li>
+<li>
+  <a href="Lung_DE_macrophages.html">Lung - DE macrophages</a>
+</li>
+<li>
   <a href="about.html">About</a>
 </li>
 <li>
@@ -366,8 +372,8 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Differential abundance and differential
-expression analysis in myeloid cells</h1>
+<h1 class="title toc-ignore">Differential expression analysis in
+monocytes, macrophages, DC (Lung)</h1>
 <h4 class="author">GinoBonazza (<a
 href="mailto:ginoandrea.bonazza@usz.ch"
 class="email">ginoandrea.bonazza@usz.ch</a>)</h4>
@@ -531,15 +537,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtreeeb92a51920c61d0c7c8946ba7f1da638a0346d27targetblankeb92a51a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtreeaf090439a31c22639f86de1c8a702be61547fdd8targetblankaf09043a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/eb92a51920c61d0c7c8946ba7f1da638a0346d27" target="_blank">eb92a51</a>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/af090439a31c22639f86de1c8a702be61547fdd8" target="_blank">af09043</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtreeeb92a51920c61d0c7c8946ba7f1da638a0346d27targetblankeb92a51a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtreeaf090439a31c22639f86de1c8a702be61547fdd8targetblankaf09043a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -549,7 +555,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/eb92a51920c61d0c7c8946ba7f1da638a0346d27" target="_blank">eb92a51</a>.
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/af090439a31c22639f86de1c8a702be61547fdd8" target="_blank">af09043</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -566,7 +572,6 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/figure/
 
 Untracked files:
     Untracked:  analysis/omnipathr-log/
@@ -578,6 +583,7 @@ Untracked files:
 
 Unstaged changes:
     Deleted:    .Rprofile
+    Modified:   analysis/_site.yml
 
 </code></pre>
 <p>
@@ -595,11 +601,11 @@ have uncommitted changes.
 
 <p>
 These are the previous versions of the repository in which changes were
-made to the R Markdown (<code>analysis/DE_myeloid.Rmd</code>) and HTML
-(<code>docs/DE_myeloid.html</code>) files. If you’ve configured a remote
-Git repository (see <code>?wflow_git_remote</code>), click on the
-hyperlinks in the table below to view the files as they were in that
-past version.
+made to the R Markdown (<code>analysis/Lung_DE_macrophages.Rmd</code>)
+and HTML (<code>docs/Lung_DE_macrophages.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -628,7 +634,7 @@ Message
 Rmd
 </td>
 <td>
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/eb92a51920c61d0c7c8946ba7f1da638a0346d27/analysis/DE_myeloid.Rmd" target="_blank">eb92a51</a>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/af090439a31c22639f86de1c8a702be61547fdd8/analysis/Lung_DE_macrophages.Rmd" target="_blank">af09043</a>
 </td>
 <td>
 GinoBonazza
@@ -637,7 +643,44 @@ GinoBonazza
 2025-07-07
 </td>
 <td>
-wflow_publish("analysis/DE_myeloid.Rmd")
+wflow_publish(c("analysis/about.Rmd", "analysis/index.Rmd",
+"analysis/license.Rmd",
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/analysis/Lung_DE_macrophages.Rmd" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+<td>
+wflow_rename("analysis/DE_macrophages.Rmd",
+"analysis/Lung_DE_macrophages.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/GinoBonazza/Fosl2tg_skin_lung/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/Lung_DE_macrophages.html" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+<td>
+wflow_rename("analysis/DE_macrophages.Rmd",
+"analysis/Lung_DE_macrophages.Rmd")
 </td>
 </tr>
 </tbody>
@@ -650,7 +693,7 @@ wflow_publish("analysis/DE_myeloid.Rmd")
 <div id="setup" class="section level2">
 <h2>Setup</h2>
 <pre class="r fold-hide"><code># Get current file name to make folder
-current_file &lt;- &quot;DE_myeloid&quot;
+current_file &lt;- &quot;Lung_DE_macrophages&quot;
 
 # Load libraries
 library(here)
@@ -770,7 +813,44 @@ for (i in seq(1, 15, 1)) {
              col = c(&quot;blue3&quot;, &quot;red3&quot;),
              add = TRUE) 
   }</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Speckle_Group-2.png" width="5400" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Speckle_Group-2.png" width="5400" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Speckle_Group-2">
+Past versions of Speckle_Group-2.png
+</button>
+</p>
+<div id="fig-Speckle_Group-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Speckle_Group-2.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>proportions &lt;- as.data.frame(props$Proportions) %&gt;%   
   pivot_wider(
     names_from  = clusters,  
@@ -832,7 +912,44 @@ ggsave(here::here(output_dir_figs, &quot;cell_type_sample_table.png&quot;), plot
 
 # Include the image in the markdown document
 knitr::include_graphics(here::here(output_dir_figs, &quot;cell_type_sample_table.png&quot;), error = FALSE, dpi = 300)</code></pre>
-<p><img src="../docs/figure/DE_myeloid.Rmd/cell_type_sample_table.png" width="2112" style="display: block; margin: auto;" /></p>
+<p><img src="../docs/figure/Lung_DE_macrophages.Rmd/cell_type_sample_table.png" width="2112" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-cell_type_sample_table">
+Past versions of cell_type_sample_table.png
+</button>
+</p>
+<div id="fig-cell_type_sample_table" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/cell_type_sample_table.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="differential-expression-analysis" class="section level2">
 <h2>Differential expression analysis</h2>
@@ -1118,7 +1235,44 @@ volcano[[4]] &lt;- EnhancedVolcano(results[[4]],
 ) + theme(legend.position = &quot;none&quot;)
 names(volcano)[4] &lt;- &quot;Interstitial macrophages&quot;</code></pre>
 <pre class="r"><code>print((volcano[[1]] | volcano[[2]] | volcano[[3]] | volcano[[4]]))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Volcano_all_metadata-1.png" width="4050" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Volcano_all_metadata-1.png" width="4050" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Volcano_all_metadata-1">
+Past versions of Volcano_all_metadata-1.png
+</button>
+</p>
+<div id="fig-Volcano_all_metadata-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Volcano_all_metadata-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>reactable(dplyr::select(results[[&quot;Alveolar macrophages&quot;]], c(&quot;gene&quot;, &quot;logFC&quot;, &quot;logCPM&quot;, &quot;FDR&quot;, &quot;percentCells&quot;)), 
           filterable = TRUE,
           searchable = TRUE,
@@ -1156,7 +1310,44 @@ m &lt;- m[comb_size(m) &gt;= 1]
 UpSet(m, column_title = &quot;Upregulated genes&quot;, comb_order = order(comb_size(m)), 
                     top_annotation = upset_top_annotation(m, add_numbers = TRUE),
                     right_annotation = upset_right_annotation(m, add_numbers = TRUE))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/UpSet_plot_DE_up-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/UpSet_plot_DE_up-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-UpSet_plot_DE_up-1">
+Past versions of UpSet_plot_DE_up-1.png
+</button>
+</p>
+<div id="fig-UpSet_plot_DE_up-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/UpSet_plot_DE_up-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>gene_sets &lt;- list()
 gene_sets[[&quot;Alveolar macrophages&quot;]] &lt;- dplyr::filter(signif[[&quot;Alveolar macrophages&quot;]], logFC&lt;0)$gene
 gene_sets[[&quot;Dendritic cells&quot;]] &lt;- dplyr::filter(signif[[&quot;Dendritic cells&quot;]], logFC&lt;0)$gene
@@ -1170,7 +1361,44 @@ m &lt;- m[comb_size(m) &gt;= 1]
 UpSet(m, column_title = &quot;Downregulated genes&quot;, comb_order = order(comb_size(m)), 
                     top_annotation = upset_top_annotation(m, add_numbers = TRUE),
                     right_annotation = upset_right_annotation(m, add_numbers = TRUE))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/UpSet_plot_DE_down-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/UpSet_plot_DE_down-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-UpSet_plot_DE_down-1">
+Past versions of UpSet_plot_DE_down-1.png
+</button>
+</p>
+<div id="fig-UpSet_plot_DE_down-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/UpSet_plot_DE_down-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="gene-set-enrichment-analysis" class="section level2">
 <h2>Gene set enrichment analysis</h2>
@@ -1441,7 +1669,44 @@ go1 &lt;- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x=&quot;NES&quot;, 
   ggtitle(&quot;Gene Ontology Enrichment Analysis\nAlveolar macrophages&quot;) + 
   theme(plot.title = element_text(face = &quot;bold&quot;, size = 14, hjust = 0.5))
 go1</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Alv_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Alv_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Alv_barplot-1">
+Past versions of GSEA_GO_Alv_barplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Alv_barplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Alv_barplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>gsea_top20 &lt;- GSEA_GO_Mono %&gt;%
   head(20)
 
@@ -1452,7 +1717,44 @@ go3 &lt;- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x=&quot;NES&quot;, 
   ggtitle(&quot;Gene Ontology Enrichment Analysis\nMonocytes&quot;) + 
   theme(plot.title = element_text(face = &quot;bold&quot;, size = 14, hjust = 0.5))
 go3</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Mono_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Mono_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Mono_barplot-1">
+Past versions of GSEA_GO_Mono_barplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Mono_barplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Mono_barplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>gsea_top20 &lt;- GSEA_GO_Int %&gt;%
   head(20)
 
@@ -1463,7 +1765,44 @@ go3 &lt;- barplot.enrichResult(reorder_GO_by_NES(gsea_plot), x=&quot;NES&quot;, 
   ggtitle(&quot;Gene Ontology Enrichment Analysis\nInterstitial macrophages&quot;) + 
   theme(plot.title = element_text(face = &quot;bold&quot;, size = 14, hjust = 0.5))
 go3</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Int_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Int_barplot-1.png" width="3000" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Int_barplot-1">
+Past versions of GSEA_GO_Int_barplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Int_barplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Int_barplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>GSEA_GO_Alv@result &lt;- classify_terms(GSEA_GO_Alv@result)
 
 activated_terms &lt;- subset(GSEA_GO_Alv@result, sign == &quot;activated&quot;)
@@ -1490,7 +1829,44 @@ p2 &lt;- emapplot(GSEA_GO_suppressed, showCategory = 100, cex_label_category = 0
   theme(
     plot.title = element_text(size = 20, face = &quot;bold&quot;, hjust = 0.5)
   )</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Alv_emapplot-1.png" width="3900" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Alv_emapplot-1.png" width="3900" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Alv_emapplot-1">
+Past versions of GSEA_GO_Alv_emapplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Alv_emapplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Alv_emapplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>GSEA_GO_Mono@result &lt;- classify_terms(GSEA_GO_Mono@result)
 
 activated_terms &lt;- subset(GSEA_GO_Mono@result, sign == &quot;activated&quot;)
@@ -1517,7 +1893,44 @@ p2 &lt;- emapplot(GSEA_GO_suppressed, showCategory = 50, cex_label_category = 0.
   theme(
     plot.title = element_text(size = 20, face = &quot;bold&quot;, hjust = 0.5)
   )</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Mono_emapplot-1.png" width="4800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Mono_emapplot-1.png" width="4800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Mono_emapplot-1">
+Past versions of GSEA_GO_Mono_emapplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Mono_emapplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Mono_emapplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>GSEA_GO_Int@result &lt;- classify_terms(GSEA_GO_Int@result)
 
 activated_terms &lt;- subset(GSEA_GO_Int@result, sign == &quot;activated&quot;)
@@ -1544,7 +1957,44 @@ p2 &lt;- emapplot(GSEA_GO_suppressed, showCategory = 50, cex_label_category = 0.
   theme(
     plot.title = element_text(size = 20, face = &quot;bold&quot;, hjust = 0.5)
   )</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/GSEA_GO_Int_emapplot-1.png" width="4800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/GSEA_GO_Int_emapplot-1.png" width="4800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-GSEA_GO_Int_emapplot-1">
+Past versions of GSEA_GO_Int_emapplot-1.png
+</button>
+</p>
+<div id="fig-GSEA_GO_Int_emapplot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/GSEA_GO_Int_emapplot-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>heatmap_cols &lt;- colorRampPalette(c(&quot;#004C8C&quot;, &quot;white&quot;, &quot;#A63A2A&quot;))(101)</code></pre>
 <pre class="r"><code>de_genes_Alv &lt;- signif[[&quot;Alveolar macrophages&quot;]] %&gt;%
   dplyr::arrange(FDR) %&gt;%
@@ -1593,7 +2043,44 @@ heatmap &lt;- pheatmap::pheatmap(
   )
 
 grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Heatmap_Alv-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Heatmap_Alv-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Heatmap_Alv-1">
+Past versions of Heatmap_Alv-1.png
+</button>
+</p>
+<div id="fig-Heatmap_Alv-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Heatmap_Alv-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>counts &lt;- cpm(pseudocounts_DC, log = TRUE)
 counts &lt;- counts[de_genes_DC, ]
 metadata_heatmap &lt;- dplyr::select(metadata, Group)
@@ -1621,7 +2108,44 @@ heatmap &lt;- pheatmap::pheatmap(
   )
 
 grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Heatmap_DC-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Heatmap_DC-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Heatmap_DC-1">
+Past versions of Heatmap_DC-1.png
+</button>
+</p>
+<div id="fig-Heatmap_DC-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Heatmap_DC-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>counts &lt;- cpm(pseudocounts_Mono, log = TRUE)
 counts &lt;- counts[de_genes_Mono, ]
 metadata_heatmap &lt;- dplyr::select(metadata, Group)
@@ -1649,7 +2173,44 @@ heatmap &lt;- pheatmap::pheatmap(
   )
 
 grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Heatmap_Mono-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Heatmap_Mono-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Heatmap_Mono-1">
+Past versions of Heatmap_Mono-1.png
+</button>
+</p>
+<div id="fig-Heatmap_Mono-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Heatmap_Mono-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>counts &lt;- cpm(pseudocounts_Int, log = TRUE)
 counts &lt;- counts[de_genes_Int, ]
 metadata_heatmap &lt;- dplyr::select(metadata, Group)
@@ -1677,7 +2238,44 @@ heatmap &lt;- pheatmap::pheatmap(
   )
 
 grid.arrange(grobs = list(title, heatmap[[4]]), heights = c(0.5, 5, 0))</code></pre>
-<p><img src="figure/DE_myeloid.Rmd/Heatmap_Int-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Lung_DE_macrophages.Rmd/Heatmap_Int-1.png" width="1800" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-Heatmap_Int-1">
+Past versions of Heatmap_Int-1.png
+</button>
+</p>
+<div id="fig-Heatmap_Int-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/e5484c223fa37db6b2c05660c0efba43640f45e1/docs/figure/Lung_DE_macrophages.Rmd/Heatmap_Int-1.png" target="_blank">e5484c2</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
