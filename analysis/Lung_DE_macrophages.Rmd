@@ -116,7 +116,7 @@ reactable(metadata,
 props <- getTransformedProps(Lung_integrated$cell_type, Lung_integrated$Sample, transform="logit")
 
 design <- model.matrix(~ 0 + metadata$Group)
-colnames(design) <- c("Fosl2tg", "WT")
+colnames(design) <- c("WT", "Fosl2tg")
 mycontr <- makeContrasts(Fosl2tg-WT, levels=design)
 differential_abundance<- propeller.ttest(props, design, contrasts = mycontr, robust=TRUE, trend=FALSE, sort=TRUE)
 
