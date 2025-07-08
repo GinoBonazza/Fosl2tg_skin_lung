@@ -388,7 +388,7 @@ monocytes, macrophages, DC (Lung)</h1>
 <h4 class="author">GinoBonazza (<a
 href="mailto:ginoandrea.bonazza@usz.ch"
 class="email">ginoandrea.bonazza@usz.ch</a>)</h4>
-<h4 class="date">07 July, 2025</h4>
+<h4 class="date">08 July, 2025</h4>
 
 </div>
 
@@ -417,7 +417,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-07-07
+<strong>Last updated:</strong> 2025-07-08
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -548,15 +548,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree823ab4d3ab678de42745cc3e29d11fb5c203f9f1targetblank823ab4da">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree25d69688d5f3708ebf33148e01d26ac9ab720d63targetblank25d6968a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/823ab4d3ab678de42745cc3e29d11fb5c203f9f1" target="_blank">823ab4d</a>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/25d69688d5f3708ebf33148e01d26ac9ab720d63" target="_blank">25d6968</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree823ab4d3ab678de42745cc3e29d11fb5c203f9f1targetblank823ab4da"
+id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree25d69688d5f3708ebf33148e01d26ac9ab720d63targetblank25d6968a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -566,7 +566,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/823ab4d3ab678de42745cc3e29d11fb5c203f9f1" target="_blank">823ab4d</a>.
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/25d69688d5f3708ebf33148e01d26ac9ab720d63" target="_blank">25d6968</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -640,6 +640,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/25d69688d5f3708ebf33148e01d26ac9ab720d63/analysis/Lung_DE_macrophages.Rmd" target="_blank">25d6968</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-08
+</td>
+<td>
+wflow_publish("analysis/Lung_DE_macrophages.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/GinoBonazza/Fosl2tg_skin_lung/d52731646330379fe5bc3b55bc6c4037cec77c92/docs/Lung_DE_macrophages.html" target="_blank">d527316</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-07
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -809,7 +843,7 @@ all.equal(metadata$Sample, names(table(Lung_integrated$Sample)))</code></pre>
 <pre class="r"><code>props &lt;- getTransformedProps(Lung_integrated$cell_type, Lung_integrated$Sample, transform=&quot;logit&quot;)
 
 design &lt;- model.matrix(~ 0 + metadata$Group)
-colnames(design) &lt;- c(&quot;Fosl2tg&quot;, &quot;WT&quot;)
+colnames(design) &lt;- c(&quot;WT&quot;, &quot;Fosl2tg&quot;)
 mycontr &lt;- makeContrasts(Fosl2tg-WT, levels=design)
 differential_abundance&lt;- propeller.ttest(props, design, contrasts = mycontr, robust=TRUE, trend=FALSE, sort=TRUE)
 
@@ -820,7 +854,7 @@ reactable(differential_abundance,
           searchable = TRUE,
           showPageSizeOptions = TRUE)</code></pre>
 <div class="reactable html-widget html-fill-item" id="htmlwidget-084f8de4a22c7749b102" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-084f8de4a22c7749b102">{"x":{"tag":{"name":"Reactable","attribs":{"data":{".rownames":["Red blod cells","Club/Ciliated/Basal cells","T cells","Aerocytes","Lymphatic cells","Proliferating cells","Alveolar macrophages","Fibroblasts","Dendritic cells","Monocytes","Neutrophils","B cells","Interstitial macrophages","AT1/AT2 cells","Endothelial cells"],"PropMean.Fosl2tg":[0.00314968098365962,0.0111239562686807,0.103515806110861,0.0387244271082271,0.00538263269628574,0.0104451345853297,0.18081954361184,0.0743966448285448,0.0357515800836351,0.0796160323223538,0.0333420540380614,0.0658991496199852,0.0239184848814909,0.0400125745252896,0.293902298335756],"PropMean.WT":[0.0168048754888983,0.000475511174512601,0.269363532576799,0.0130007860927975,0.00103857423757566,0.00255265964966393,0.0855000685421513,0.0351733152553409,0.0193951797732112,0.0574479079650264,0.0530043952654509,0.0804827295198194,0.0302560049350349,0.0366000629731015,0.298904396550616],"PropRatio":[0.187426618289458,23.3936800330355,0.384297774537639,2.97862197191911,5.1827134753991,4.09186339694949,2.11484676790284,2.11514451476814,1.84332295455264,1.38588218688178,0.629043192948081,0.818798641809943,0.790536785436419,1.09323786012871,0.983265223688293],"Tstatistic":[-3.05363310437257,2.95166812084071,-2.48291067666002,2.39869609197278,2.11129894462609,2.08061790202364,2.00913341389527,1.7198089262627,1.28035206023498,1.26189449769348,-1.20311538993067,-0.765219893171075,0.459434355692728,-0.0633604195274845,0.0394797361207117],"P.Value":[0.00616627024111608,0.00844893034509555,0.0218199668104013,0.0261027740574709,0.0472580645593943,0.0502586802501597,0.0579246590085412,0.100586805332926,0.214772785260483,0.22288469734811,0.242693691096016,0.453928449381699,0.656487959123279,0.950095548533379,0.968891299984309],"FDR":[0.0633669775882166,0.0633669775882166,0.0978854027155158,0.0978854027155158,0.124124269304017,0.124124269304017,0.124124269304017,0.188600259999237,0.330945942403658,0.330945942403658,0.330945942403658,0.567410561727124,0.757486106680706,0.968891299984309,0.968891299984309]},"columns":[{"id":".rownames","name":"","type":"character","sortable":false,"filterable":false,"rowHeader":true},{"id":"PropMean.Fosl2tg","name":"PropMean.Fosl2tg","type":"numeric"},{"id":"PropMean.WT","name":"PropMean.WT","type":"numeric"},{"id":"PropRatio","name":"PropRatio","type":"numeric"},{"id":"Tstatistic","name":"Tstatistic","type":"numeric"},{"id":"P.Value","name":"P.Value","type":"numeric"},{"id":"FDR","name":"FDR","type":"numeric"}],"filterable":true,"searchable":true,"showPageSizeOptions":true,"dataKey":"89d764f20f5bbd6d572116327a36fa2e"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-084f8de4a22c7749b102">{"x":{"tag":{"name":"Reactable","attribs":{"data":{".rownames":["Red blod cells","Club/Ciliated/Basal cells","T cells","Aerocytes","Lymphatic cells","Proliferating cells","Alveolar macrophages","Fibroblasts","Dendritic cells","Monocytes","Neutrophils","B cells","Interstitial macrophages","AT1/AT2 cells","Endothelial cells"],"PropMean.WT":[0.00314968098365962,0.0111239562686807,0.103515806110861,0.0387244271082271,0.00538263269628574,0.0104451345853297,0.18081954361184,0.0743966448285448,0.0357515800836351,0.0796160323223538,0.0333420540380614,0.0658991496199852,0.0239184848814909,0.0400125745252896,0.293902298335756],"PropMean.Fosl2tg":[0.0168048754888983,0.000475511174512601,0.269363532576799,0.0130007860927975,0.00103857423757566,0.00255265964966393,0.0855000685421513,0.0351733152553409,0.0193951797732112,0.0574479079650264,0.0530043952654509,0.0804827295198194,0.0302560049350349,0.0366000629731015,0.298904396550616],"PropRatio":[5.33542145254746,0.0427465879069837,2.6021488185903,0.335725717941879,0.192949119172172,0.244387435012006,0.472847496649432,0.472780934360705,0.542498533710656,0.721562055898843,1.58971595466027,1.22130148847037,1.26496327359131,0.91471402196249,1.01701959543421],"Tstatistic":[3.05363310437257,-2.95166812084071,2.48291067666002,-2.39869609197277,-2.11129894462609,-2.08061790202364,-2.00913341389526,-1.7198089262627,-1.28035206023498,-1.26189449769348,1.20311538993067,0.765219893171073,-0.459434355692728,0.0633604195274844,-0.0394797361207121],"P.Value":[0.00616627024111608,0.00844893034509553,0.0218199668104013,0.0261027740574711,0.047258064559395,0.0502586802501598,0.0579246590085414,0.100586805332926,0.214772785260483,0.22288469734811,0.242693691096016,0.4539284493817,0.656487959123279,0.950095548533379,0.968891299984308],"FDR":[0.0633669775882165,0.0633669775882165,0.0978854027155166,0.0978854027155166,0.124124269304017,0.124124269304017,0.124124269304017,0.188600259999237,0.330945942403658,0.330945942403658,0.330945942403658,0.567410561727125,0.757486106680706,0.968891299984308,0.968891299984308]},"columns":[{"id":".rownames","name":"","type":"character","sortable":false,"filterable":false,"rowHeader":true},{"id":"PropMean.WT","name":"PropMean.WT","type":"numeric"},{"id":"PropMean.Fosl2tg","name":"PropMean.Fosl2tg","type":"numeric"},{"id":"PropRatio","name":"PropRatio","type":"numeric"},{"id":"Tstatistic","name":"Tstatistic","type":"numeric"},{"id":"P.Value","name":"P.Value","type":"numeric"},{"id":"FDR","name":"FDR","type":"numeric"}],"filterable":true,"searchable":true,"showPageSizeOptions":true,"dataKey":"e8431edcd8a31a56e3963cfdb1c0739a"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <pre class="r"><code>par(mfrow = c(3, 5), mar = c(4, 5, 3, 1))
 
 for (i in seq(1, 15, 1)) {
