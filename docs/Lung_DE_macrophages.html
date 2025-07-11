@@ -388,7 +388,7 @@ monocytes, macrophages, DC (Lung)</h1>
 <h4 class="author">GinoBonazza (<a
 href="mailto:ginoandrea.bonazza@usz.ch"
 class="email">ginoandrea.bonazza@usz.ch</a>)</h4>
-<h4 class="date">08 July, 2025</h4>
+<h4 class="date">11 July, 2025</h4>
 
 </div>
 
@@ -417,7 +417,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-07-08
+<strong>Last updated:</strong> 2025-07-11
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -548,15 +548,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree25d69688d5f3708ebf33148e01d26ac9ab720d63targetblank25d6968a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree5b5fb3692d530e146b5425de71d1b2c02614e10btargetblank5b5fb36a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/25d69688d5f3708ebf33148e01d26ac9ab720d63" target="_blank">25d6968</a>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/5b5fb3692d530e146b5425de71d1b2c02614e10b" target="_blank">5b5fb36</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree25d69688d5f3708ebf33148e01d26ac9ab720d63targetblank25d6968a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomGinoBonazzaFosl2tgskinlungtree5b5fb3692d530e146b5425de71d1b2c02614e10btargetblank5b5fb36a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -566,7 +566,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/25d69688d5f3708ebf33148e01d26ac9ab720d63" target="_blank">25d6968</a>.
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/tree/5b5fb3692d530e146b5425de71d1b2c02614e10b" target="_blank">5b5fb36</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -640,6 +640,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/GinoBonazza/Fosl2tg_skin_lung/blob/5b5fb3692d530e146b5425de71d1b2c02614e10b/analysis/Lung_DE_macrophages.Rmd" target="_blank">5b5fb36</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-11
+</td>
+<td>
+wflow_publish("analysis/Lung_DE_macrophages.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/GinoBonazza/Fosl2tg_skin_lung/9f0a21da1fc067473eea7892c511690a9d79cce2/docs/Lung_DE_macrophages.html" target="_blank">9f0a21d</a>
+</td>
+<td>
+GinoBonazza
+</td>
+<td>
+2025-07-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2338,6 +2372,27 @@ GinoBonazza
 </table>
 </div>
 </div>
+<pre class="r"><code>gene_list &lt;- c(
+  &quot;Itgam&quot;,
+  &quot;Fcgr1&quot;,
+  &quot;Ccr2&quot;,
+  &quot;Cx3cr1&quot;,
+  &quot;Ly6c2&quot;,
+  &quot;H2-Aa&quot;,
+  &quot;H2-Ab1&quot;,
+  &quot;Cd14&quot;,
+  &quot;Mrc1&quot;,
+  &quot;Cd163&quot;,
+  &quot;Adgre1&quot;,
+  &quot;Itgax&quot;,
+  &quot;Siglecf&quot;,
+  &quot;Fabp4&quot;
+)</code></pre>
+<pre class="r"><code>FeaturePlot(Myeloid, gene_list, ncol = 5)</code></pre>
+<p><img src="figure/Lung_DE_macrophages.Rmd/unnamed-chunk-2-1.png" width="4500" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Clustered_DotPlot(seurat_object = Myeloid, features = gene_list, plot_km_elbow = FALSE, group.by = &quot;cell_type&quot;,
+    legend_position = &quot;bottom&quot;, legend_orientation = &quot;horizontal&quot;, show_ident_legend = FALSE, row_label_size = 9, column_label_size = 9)</code></pre>
+<p><img src="figure/Lung_DE_macrophages.Rmd/unnamed-chunk-3-1.png" width="1500" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -2395,7 +2450,7 @@ other attached packages:
 [43] purrr_1.0.2                 tidyr_1.3.1                
 [45] tibble_3.2.1                tidyverse_2.0.0            
 [47] magrittr_2.0.3              ggplot2_3.5.0              
-[49] dplyr_1.1.4                 scCustomize_2.1.2          
+[49] dplyr_1.1.4                 scCustomize_3.0.1          
 [51] scDblFinder_1.16.0          Matrix_1.6-5               
 [53] DropletUtils_1.22.0         SingleCellExperiment_1.24.0
 [55] SummarizedExperiment_1.32.0 Biobase_2.62.0             
@@ -2520,9 +2575,9 @@ loaded via a namespace (and not attached):
 [219] snakecase_0.11.1              scran_1.30.2                 
 [221] ggfun_0.1.4                   sp_2.1-3                     
 [223] future.apply_1.11.1           bslib_0.6.1                  
-[225] pillar_1.9.0                  metapod_1.10.1               
-[227] locfit_1.5-9.9                jsonlite_1.8.8               
-[229] GetoptLong_1.0.5             </code></pre>
+[225] pillar_1.9.0                  prismatic_1.1.1              
+[227] metapod_1.10.1                locfit_1.5-9.9               
+[229] jsonlite_1.8.8                GetoptLong_1.0.5             </code></pre>
 </div>
 </div>
 
